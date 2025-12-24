@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Overleaf Clone - Minimal</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; height: 100vh; display: grid; grid-template-columns: 1fr 1fr; }
+    #editor { width: 100%; height: 100%; box-sizing: border-box; padding: 10px; font-family: monospace; }
+    #controls { padding: 8px; background: #f3f3f3; display:flex; gap:8px; }
+    #left { display:flex; flex-direction:column; height:100%; }
+    iframe { width:100%; height:calc(100% - 40px); border: none; }
+  </style>
+</head>
+<body>
+  <div id="left">
+    <div id="controls">
+      <button id="compile">Compile</button>
+      <span id="status"></span>
+    </div>
+    <textarea id="editor">% Sample LaTeX
+\documentclass{article}
+\begin{document}
+Hello, Overleaf Clone!
+\end{document}
+</textarea>
+  </div>
+  <div id="right">
+    <iframe id="pdfview"></iframe>
+  </div>
+<script>
+document.getElementById('compile').addEventListener('click', async () => {
+  const status = document.getElementById('status')
+  status.textContent = 'Compiling...'
+  const tex = document.getElementById('editor').value
+  const fd = new FormData()
+  fd.append('tex_source', tex)
+  try {
+    const res = await fetch('/compile', { method: 'POST', body: fd })
+    if (!res.ok) {
+      const err = await res.json().catch(()=>null)
+      status.textContent = 'Error: ' + (err?.error || res.statusText)
+      return
+    }
+    const blob = await res.blob()
+    const url = URL.createObjectURL(blob)
+    document.getElementById('pdfview').src = url
+    status.textContent = 'Compiled successfully'
+  } catch (e) {
+    status.textContent = 'Network error'
+  }
+})
+</script>
+</body>
+</html>
